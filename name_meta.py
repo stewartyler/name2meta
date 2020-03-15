@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+import piexif
 
 def get_files(path):
     files = os.listdir(path)
@@ -19,7 +20,13 @@ def get_year(files):
                 if len(year)<4:
                     year=""
         if year[0:2]=="19" or year[0:2]=="20":
-            print("FILE:", file_name, "YEAR:", year)
+            year=int(year)
+            exif_dict = piexif.load(os.path.join(file_path, file_name))
+            exif_dict['Exif'] = {
+                piexif.ExifIFD.DateTimeOriginal: datetime(year, 1, 1, 12, 0, 0).strftime("%Y:%m:%d %H:%M:%S")}
+            exif_bytes = piexif.dump(exif_dict)
+            piexif.insert(exif_bytes, os.path.join(file_path, file_name))
+            # print("FILE:", file_name, "YEAR:", year)
         else:
             print("FILE:", file_name, "YEAR: No year")
         year=""
@@ -27,5 +34,6 @@ def get_year(files):
 
 if __name__ == '__main__':
     print("Run:", datetime.now())
-    file_list = get_files(path="test_pictures")
+    file_path = input("Desired file path")
+    file_list = get_files(path=file_path)
     get_year(files=file_list)
